@@ -59,6 +59,7 @@ You will have to update the Kubernetes manifests, notably, the previous Redis `s
 
 **TIP**: *vote* and *worker* need to be aware of the Redis host IP and password.
 
+<!-- When deploying into the cluster, _do not_ deploy the seed job to avoit overloading the underlying VM. -->
 
 ### Proxmox setup
 
