@@ -48,15 +48,14 @@ Use the given manifests in `k8s-manifests/`.
 
 ## Part 3 - Proxmox, Kubernetes and offloaded Redis
 
-In this last part, you must deploy with Terraform the Redis database inside a Proxmox VM rather than on the cluster.
-This database must be available to the other components of the application located on the cluster.
-The previous Redis `service` must be changed to a "headless" service.
+In this last part, the objective is to deploy with Terraform the Redis database inside a Proxmox VM rather than on the cluster.
+
+### Kubernetes manifests update
+
+The database must be available to the other components of the application located on the cluster.
+You will have to update the Kubernetes manifests, notably, the previous Redis `service` must be changed to a "headless" service.
 
 **TIP**: *vote* and *worker* need to be aware of the Redis host IP and password.
-
-To install Redis upon startup of the VM, there is a given `install-redis.sh.tftpl` template script that must be instantiated and executed inside the VM.
-At first, move the script through SSH into the VM and execute it directly.
-Second, use a Terraform provisioner to execute the script automatically after the creation of the VM.
 
 
 ### Proxmox setup
@@ -74,11 +73,40 @@ export PM_API_TOKEN_ID='e23diant@pve!terraform-token'
 export PM_API_TOKEN_SECRET='FIXME'
 ```
 
+Try to `plan` inside `terraform/proxmox/pve_vm.tf`.
+
+### VM deployment
+
 You will use the `vm_qemu` resource of the Telmate provider to deploy your VM.
 See [the documentation](https://registry.terraform.io/providers/Telmate/proxmox/latest/docs/resources/vm_qemu)
 
+The script to deploy a clone of the Debian template VM is located in `terraform/proxmox/pve_vm.tf`.
+Update the `FIXME`s with your informations ; deploy with `apply` and check the dashboard.
 
-## Debugging tips
+When booting, the VM will use some CPU and it is normal. But if the VM uses 100% CPU after ~45s of uptime, consider stopping and restarting the VM.
+
+If everything seem okay, try to connect to the VM with SSH.
+
+### Manual Redis installation and Kubernetes connection
+
+To install Redis upon startup of the VM, there is a given `install-redis.sh.tftpl` template script that must be instantiated with a password and executed inside the VM.
+
+At first, add your password manually in the script, and execute it directly in the VM.
+
+Deploy the application ; debug ; repeat, until it works.
+
+### Automatic installation
+
+We would like to use Terraform as a source of truth for our whole infrastructure and application.
+There are multiple solutions to install Redis in the VM:
+
+* Use a [Terraform _provisioner_](https://developer.hashicorp.com/terraform/language/provisioners)
+* Use Ansible and then a Terraform `null-resource` to run your playbook.
+* Use _cloud-init_ directly with the Proxmox VM resource.
+
+
+
+## Kubernetes Debugging tips
 
 * Ping from inside a Deployment's pod:
   * Launch bash on a pod, e.g.: `kubectl exec deployments/vote-deplt -it -- bash` then
