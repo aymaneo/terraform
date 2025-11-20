@@ -1,0 +1,7 @@
+FROM postgres:15-alpine
+
+WORKDIR /healthchecks
+COPY postgres.sh .
+
+HEALTHCHECK --interval=5s \
+    CMD /healthchecks/postgres.sh

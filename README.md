@@ -1,93 +1,114 @@
-# project
+FILA3 Voting App Terraform Project
+===================================
+
+# Table of Content
+
+  * [Local Docker deployment](#part-1---local-docker-deployment)
+  * [Kubernetes deployment](#part-2---gke-and-kubernetes)
+  * [Offloading Redis from the Cluster](#part-3-optional---gke-kubernetes-and-offloaded-redis)
+
+## Objectives
+
+The objective is to use _only_ Terraform to deploy the entirety of the voting app.
+
+The tutorial on Terraform did not give you _all_ elements for this project: this was on purpose.
+The point is for you to learn how to seek information in providers and other documentations.
+But most elements in the tutorials can be directly applied.
+
+Different levels are possible, the more advancement you make the better.
+<!-- **Part 1 and Part 2 are mandatory.** -->
 
 
+## Part 1 - Local Docker deployment
 
-## Getting started
+![voting-app-docker](figures/login-nuage-voting.drawio.svg)
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+In this first part, you must write Terraform code that deploys the application with the Docker provider.
+The app will thus be deployed locally inside containers on your machine.
+Use the given `docker-compose.yml` as a reference configuration.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+**TIP**: Recall that a Docker Compose "service" creates a DNS records accessible by other containers.
+Terraform does not do that, so you will need to add the relevant `host` configurations.
 
-## Add your files
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## Part 2 - Kubernetes
+
+![voting-app-k8s](figures/login-nuage-voting-k8s.drawio.svg)
+
+In this second part, you must write code that deploys the application onto a Kubernetes cluster.
+Reuse the configuration that was set in the tutorial.
+Use the given manifests in `k8s-manifests/`.
+
+**IMPORTANT**: There is _a single cluster for everyone_. You must deploy manifest inside _your own_ Kubernetes namespace. It has the same name than your login identifier. See `kubectl get ns`.
+
+**TIP**: You can use the `kubernetes_manifest` resource and provide any YAML manifest file directly.
+
+**IMPORTANT**: Make sure to organize your Terraform code well. Attention will be given to your organization (modules, directories, files)
+
+
+## Part 3 - Proxmox, Kubernetes and offloaded Redis
+
+In this last part, you must deploy with Terraform the Redis database inside a Proxmox VM rather than on the cluster.
+This database must be available to the other components of the application located on the cluster.
+The previous Redis `service` must be changed to a "headless" service.
+
+**TIP**: *vote* and *worker* need to be aware of the Redis host IP and password.
+
+To install Redis upon startup of the VM, there is a given `install-redis.sh.tftpl` template script that must be instantiated and executed inside the VM.
+At first, move the script through SSH into the VM and execute it directly.
+Second, use a Terraform provisioner to execute the script automatically after the creation of the VM.
+
+
+### Proxmox setup
+
+The main endpoint to the Proxmox server is `10.144.208.51:8006` accessible with your browser.
+You can connect with the provided login and password. The realm is `Proxmox VE authentication server`.
+
+Then, create an API token for Terraform: "Datacenter" > "Permissions" > "API Tokens" > "Add".
+The token ID is irrelevant, chose something meaningful like "terraform-token".
+Make sure to _uncheck_ `Privilege Separation`.
+Save the token credentials safely in your machine, then export environment variables
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.imt-atlantique.fr/terraform-25-26/project.git
-git branch -M main
-git push -uf origin main
+export PM_API_TOKEN_ID='e23diant@pve!terraform-token'
+export PM_API_TOKEN_SECRET='FIXME'
 ```
 
-## Integrate with your tools
+You will use the `vm_qemu` resource of the Telmate provider to deploy your VM.
+See [the documentation](https://registry.terraform.io/providers/Telmate/proxmox/latest/docs/resources/vm_qemu)
 
-- [ ] [Set up project integrations](https://gitlab.imt-atlantique.fr/terraform-25-26/project/-/settings/integrations)
 
-## Collaborate with your team
+## Debugging tips
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+* Ping from inside a Deployment's pod:
+  * Launch bash on a pod, e.g.: `kubectl exec deployments/vote-deplt -it -- bash` then
+  * Install the `ping` command: `apt update; apt install iputils-ping`
+  * Check connectivity: `ping redis -p 6379`
 
-## Test and Deploy
+* Pod for debugging networking: https://hub.docker.com/r/rtsp/net-tools
+  * Start the pod: `kubectl run net-debug --image rtsp/net-tools`, then
+  * Launch an interactive bash session: `kubectl exec net-debug -it -- bash` or
+  * Launch a single command, e.g.: `kubectl exec net-debug -- nslookup redis`
 
-Use the built-in continuous integration in GitLab.
+* Pod for debugging Redis:
+  * Start the pod: `kubectl run redis-debug --image redis:alpine`
+  * Check the connection: `kubectl exec redis-debug -it -- redis-cli -h redis -pass '{yourpassword}'`
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+* Start a SSH connection on the GCP VM:
+  * `gcloud compute ssh {VM_NAME}`
 
-***
 
-# Editing this README
+## Destroy everything
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+Do not forgot to destroy all resources, especially the K8S cluster.
+```
+$ terraform destroy
+```
 
-## Suggestions for a good README
+If you forgot to add `deletion_protection = true` in the Terraform cluster resource, you can modify the state directly.
+*This is not good practice.*
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+```
+    sed -e '/deletion_protection/s/true/false/' -i terraform.tfstate
+```
 
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.

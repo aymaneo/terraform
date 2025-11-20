@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: seed-job
+  name: seed-job
+  namespace: xyz
+spec:
+  template:
+    spec:
+      containers:
+      # - image: europe-west9-docker.pkg.dev/tuto-terraform-406010/voting-app-repo/seed-data
+      # - image: europe-west9-docker.pkg.dev/tuto-terraform-406010/voting-app-repo/seed-data
+      - image: eloip13009/voting-fila3:seed-data
+        # imagePullPolicy: Never
+        name: seed-job
+        env:
+        - name: TARGET_HOST
+          value: "vote"
+        - name: TARGET_PORT
+          value: "5000"
+      restartPolicy: Never
+      # restartPolicy: OnFailure
