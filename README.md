@@ -48,7 +48,7 @@ __Install kubenv__, [see kubectx](https://github.com/ahmetb/kubectx)
 Make sure to organize your Terraform code well. Attention will be given to your organization (modules, directories, files)
 
 
-## Part 3 - Proxmox, Kubernetes and offloaded Redis
+## Part 3 - Proxmox, Kubernetes and offloaded database
 
 In this last part, the objective is to deploy with Terraform the Redis database inside a Proxmox VM rather than on the cluster.
 
@@ -108,6 +108,11 @@ There are multiple solutions to install Redis in the VM:
 * Use _cloud-init_ directly with the Proxmox VM resource.
 
 
+### Optional - Automatic PostgreSQL offloading
+
+The idea here is similar to previously.
+In addition to offloading Redis, we would like to move the PostgreSQL database in a Proxmox VM.
+
 
 ## Kubernetes Debugging tips
 
@@ -125,18 +130,4 @@ There are multiple solutions to install Redis in the VM:
   * Start the pod: `kubectl run redis-debug --image redis:alpine`
   * Check the connection: `kubectl exec redis-debug -it -- redis-cli -h redis -pass '{yourpassword}'`
 
-
-## Destroy everything
-
-Do not forgot to destroy all resources, especially the K8S cluster.
-```
-$ terraform destroy
-```
-
-If you forgot to add `deletion_protection = true` in the Terraform cluster resource, you can modify the state directly.
-*This is not good practice.*
-
-```
-    sed -e '/deletion_protection/s/true/false/' -i terraform.tfstate
-```
 
