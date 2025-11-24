@@ -22,3 +22,11 @@ spec:
       # - image: worker
         # imagePullPolicy: Never
         name: worker-container
+        env:
+        - name: REDIS_HOST
+          value: "redis"  # Resolves to external Redis via headless service
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: redis-password

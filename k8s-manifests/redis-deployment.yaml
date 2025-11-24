@@ -6,7 +6,8 @@ metadata:
   name: redis-deplt
   namespace: xyz
 spec:
-  replicas: 1
+  # Redis is offloaded to Proxmox VM, no replicas needed in cluster
+  replicas: 0
   selector:
     matchLabels:
       app: redis

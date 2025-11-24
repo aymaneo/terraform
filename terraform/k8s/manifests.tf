@@ -4,6 +4,8 @@ locals {
     "pgsql-service.yaml"     = "pgsql-service.yaml"
     "redis-deployment.yaml"  = "redis-deployment.yaml"
     "redis-service.yaml"     = "redis-service.yaml"
+    "redis-endpoints.yaml"   = "redis-endpoints.yaml"
+    "redis-secret.yaml"      = "redis-secret.yaml"
     "result-deployment.yaml" = "result-deployment.yaml"
     "result-service.yaml"    = "result-service.yaml"
     "seed-job.yaml"          = "seed-job.yaml"
