@@ -22,14 +22,6 @@ spec:
       # - image: vote
         # imagePullPolicy: Never
         name: vote-container
-        env:
-        - name: REDIS_HOST
-          value: "redis"  # Resolves to external Redis via headless service
-        - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: redis-secret
-              key: redis-password
         ports:
         - containerPort: 5000
           name: vote-port

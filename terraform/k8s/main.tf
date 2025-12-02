@@ -8,12 +8,17 @@ terraform {
 }
 
 provider "kubernetes" {
-  config_path = pathexpand("~/.kube/config")
+  config_path = pathexpand(var.kubeconfig_path)
 }
 
 variable "namespace" {
   type    = string
   default = "a23ouraq"
+}
+
+variable "kubeconfig_path" {
+  description = "Path to the kubeconfig file"
+  default     = "~/.kube/config"
 }
 
 locals {
