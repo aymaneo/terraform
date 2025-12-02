@@ -1,6 +1,13 @@
-# Terraform
+# Terraform Lab
 
 As part of the Cloud Infrastructure course at IMT Atlantique Engineering School, this [lab](lab.md) is about deploying a distributed voting application on Docker, Kubernetes, and Proxmox using Terraform.
+
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Deploying the system with Terraform on your local Docker](#deploying-the-system-with-terraform-on-your-local-docker)
+- [Deploying the system with Terraform on Kubernetes cluster](#deploying-the-system-with-terraform-on-kubernetes-cluster)
+- [Deploying Redis on Proxmox VM and connecting it to Kubernetes cluster](#deploying-redis-on-proxmox-vm-and-connecting-it-to-kubernetes-cluster)
 
 ## Prerequisites
 
