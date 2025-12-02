@@ -35,3 +35,32 @@ terraform apply
 Make sure to replace `kubeconfig` with the path to your actual kubeconfig file if it's located elsewhere. You should see an output similar to the following after completion:
 
 ![k8s-deployment-output](figures/k8s-deployment-terminal-output.png)
+
+## Deploying Redis on Proxmox VM and connecting it to Kubernetes cluster
+
+To deploy Redis on a Proxmox VM and connect it to the Kubernetes cluster, first navigate to the `terraform/proxmox` directory and run:
+
+```sh
+export PM_API_TOKEN_ID='your_token_id'
+export PM_API_TOKEN_SECRET='your_token_secret'
+```
+
+Make sure to replace `your_token_id` and `your_token_secret` with your actual Proxmox API token credentials. Then run:
+
+```sh
+terraform init
+terraform apply
+```
+
+This will create a VM on Proxmox. You then need to ssh into the VM and install Redis. You can use the provided `install-redis.sh.` script.
+
+Finally, navigate to the `terraform/k8s-proxmox` directory and run:
+
+```sh
+export KUBECONFIG=kubeconfig
+terraform apply -var="kubeconfig_path=$KUBECONFIG"
+terraform apply
+```
+
+Make sure to replace `kubeconfig` with the path to your actual kubeconfig file if it's located elsewhere. This will deploy the application on the Kubernetes cluster, connecting it to the Redis instance running on the Proxmox VM. You should see an output similar to the following after completion:
+![k8s-deployment-output](figures/k8s-deployment-terminal-output.png)

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: pgsql
+  name: pgsql-deplt
+  namespace: xyz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgsql
+  template:
+    metadata:
+      labels:
+        app: pgsql
+    spec:
+      initContainers:
+      - name: dl-hc-scripts
+        image: alpine:3.7
+        command: ["/bin/sh","-c"]
+        args: ['apk add --no-cache git && git clone https://gitlab.imt-atlantique.fr/login-nuage/healthchecks.git /healthchecks/']
+        volumeMounts:
+        - mountPath: /healthchecks/
+          name: source
+      volumes:
+      - name: source
+        emptyDir: {}
+      - name: db-data
+        # emptyDir: {}
+        persistentVolumeClaim:
+          claimName: db-data-claim
+      containers:
+      - image: postgres:15-alpine
+      # - image: eloip13009/postgres-hc
+      # - image: europe-west9-docker.pkg.dev/nuage-k8s/login-nuage-images/postgres-hs
+        name: postgres-container
+        env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        ports:
+        - containerPort: 5432
+          name: postgres-port
+        volumeMounts:
+        # - mountPath: /healthchecks/
+        #   name: source
+        #   subPath: healthchecks/
+        - mountPath: /var/lib/postgresql/data
+          name: db-data
+          subPath: data
+        livenessProbe:
+          exec:
+            command:
+            - /healthchecks/postgres.sh
+          periodSeconds: 15

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: vote
+  name: vote-deplt
+  namespace: xyz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vote
+  template:
+    metadata:
+      labels:
+        app: vote
+    spec:
+      containers:
+      - image: eloip13009/voting-fila3:vote
+      # - image: europe-west9-docker.pkg.dev/tuto-terraform-406010/voting-app-repo/vote
+      # - image: gitlab-registry.imt-atlantique.fr/login-nuage/project-code/vote
+      # - image: vote
+        # imagePullPolicy: Never
+        name: vote-container
+        env:
+        - name: REDIS_HOST
+          value: "redis"  # Resolves to external Redis via headless service
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: redis-password
+        ports:
+        - containerPort: 5000
+          name: vote-port
+        livenessProbe:
+          httpGet:
+            path: /
+            port: vote-port
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 2
+          initialDelaySeconds: 5
+        resources:
+          requests:
+            cpu: 20m
