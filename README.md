@@ -52,16 +52,16 @@ export PM_API_TOKEN_ID='your_token_id'
 export PM_API_TOKEN_SECRET='your_token_secret'
 ```
 
-Make sure to replace `your_token_id` and `your_token_secret` with your actual Proxmox API token credentials. Then run:
+Make sure to replace `your_token_id` and `your_token_secret` with your actual Proxmox API token credentials. Also, before going further, check that the Proxmox configuration in `terraform/proxmox/pve_vm.tf` match your environment (`pm_api_url`, `ssh_key_path`, and `network_config`).
+
+If you change the `vm_ip`, update `redis-endpoints.yaml` in `k8s-proxmox-manifests` folder accordingly. Finally run:
 
 ```sh
 terraform init
 terraform apply
 ```
 
-This will create a VM on Proxmox. You then need to ssh into the VM and install Redis. You can use the provided `install-redis.sh.` script.
-
-Finally, navigate to the `terraform/k8s-proxmox` directory and run:
+This will create a VM on Proxmox. You then need to ssh into the VM and install Redis. You can use the provided `install-redis.sh` script in the `templates` folder. Finally, navigate to the `terraform/k8s-proxmox` directory and run:
 
 ```sh
 export KUBECONFIG=kubeconfig
